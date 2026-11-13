@@ -78,7 +78,7 @@ define(['./workbox-26b8999e'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "/index.html",
-    "revision": "0.fbman7e0mr"
+    "revision": "0.ts4fdv0a068"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
@@ -92,9 +92,10 @@ define(['./workbox-26b8999e'], (function (workbox) { 'use strict';
     plugins: []
   }), 'GET');
   workbox.registerRoute(({
-    request
-  }) => request.destination === "script" || request.destination === "style" || request.destination === "font" || request.destination === "image", new workbox.CacheFirst({
-    "cacheName": "static-assets",
+    request,
+    url
+  }) => !url.pathname.startsWith("/@") && !url.pathname.startsWith("/src/") && !url.pathname.startsWith("/node_modules/") && (request.destination === "script" || request.destination === "style" || request.destination === "font" || request.destination === "image"), new workbox.CacheFirst({
+    "cacheName": "static-assets-v2",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 120,
       maxAgeSeconds: 31536000

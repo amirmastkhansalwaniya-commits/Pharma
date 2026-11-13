@@ -456,7 +456,6 @@ export default function App() {
               {route === 'home' && (
                 <DashboardView
                   company={company}
-                  settings={settings}
                   customers={customers}
                   products={products}
                   invoices={invoices}
@@ -465,7 +464,6 @@ export default function App() {
                   balances={balances}
                   onNavigate={navigateTo}
                   onPreviewInvoice={(inv) => setPreviewInvoice(inv)}
-                  onExportBackup={handleExportCompleteBackup}
                 />
               )}
 

@@ -67,14 +67,17 @@ export default defineConfig(() => {
               },
             },
             {
-              urlPattern: ({request}) =>
-                request.destination === 'script' ||
-                request.destination === 'style' ||
-                request.destination === 'font' ||
-                request.destination === 'image',
+              urlPattern: ({request, url}) =>
+                !url.pathname.startsWith('/@') &&
+                !url.pathname.startsWith('/src/') &&
+                !url.pathname.startsWith('/node_modules/') &&
+                (request.destination === 'script' ||
+                  request.destination === 'style' ||
+                  request.destination === 'font' ||
+                  request.destination === 'image'),
               handler: 'CacheFirst',
               options: {
-                cacheName: 'static-assets',
+                cacheName: 'static-assets-v2',
                 expiration: {
                   maxEntries: 120,
                   maxAgeSeconds: 60 * 60 * 24 * 365,
@@ -88,6 +91,36 @@ export default defineConfig(() => {
           type: 'module',
         },
       }),
+      {
+        name: 'safe-pwa-dev-hmr',
+        apply: 'serve',
+        transformIndexHtml: {
+          order: 'post',
+          handler(html) {
+            const withoutDevReady = html.replace(
+              /<script id="vite-plugin-pwa:register-dev-sw"[\s\S]*?<\/script>/g,
+              '',
+            );
+            return withoutDevReady.replace(
+              '</body>',
+              `<script type="module">if('caches'in window){caches.delete('static-assets').catch(()=>{});}if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then((regs)=>regs.forEach((r)=>r.update().catch(()=>{}))).catch(()=>{});}</script></body>`,
+            );
+          },
+        },
+        transform(code, id) {
+          if (id.includes('pwa-entry-point-loaded') && code.includes('import.meta.hot.send(')) {
+            const guarded = code.replace(
+              /import\.meta\.hot\.send\(([^)]+)\);/g,
+              'if (window.__rkvpViteWsConnected) import.meta.hot?.send?.($1);',
+            );
+            return {
+              code: `if (import.meta.hot) { import.meta.hot.on('vite:ws:connect', () => { window.__rkvpViteWsConnected = true; import.meta.hot?.send?.('vite-pwa-plugin:dev-ready'); }); }\n${guarded}`,
+              map: null,
+            };
+          }
+          return null;
+        },
+      },
     ],
     resolve: {
       alias: {
