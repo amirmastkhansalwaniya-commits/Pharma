@@ -47,6 +47,7 @@ const emptyCustomerForm = (): Omit<Customer, 'id' | 'createdAt' | 'updatedAt'> =
   email: '',
   address: '',
   shippingAddress: '',
+  pincode: '',
   state: 'Maharashtra',
   stateCode: '27',
   gstin: '',
@@ -105,6 +106,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
       email: c.email,
       address: c.address,
       shippingAddress: c.shippingAddress,
+      pincode: c.pincode || '',
       state: c.state,
       stateCode: c.stateCode,
       gstin: c.gstin,
@@ -135,6 +137,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         email: form.email.trim(),
         address: form.address.trim(),
         shippingAddress: form.shippingAddress.trim() || form.address.trim(),
+        pincode: (form.pincode || '').trim(),
         state: form.state,
         stateCode: form.stateCode,
         gstin: form.gstin.trim().toUpperCase(),
@@ -561,7 +564,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     State / Place of Supply
@@ -577,6 +580,18 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                       </option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Party Pincode
+                  </label>
+                  <input
+                    type="text"
+                    value={form.pincode || ''}
+                    onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                    placeholder="e.g., 132046"
+                    className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3.5 font-mono text-sm text-slate-900 focus:border-emerald-700 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">

@@ -41,6 +41,7 @@ export interface Customer {
   email: string;
   address: string;
   shippingAddress: string;
+  pincode?: string;
   state: string;
   stateCode: string;
   gstin: string;
@@ -72,10 +73,15 @@ export interface Invoice {
   invoiceDate: string;
   placeOfSupply: string;
   placeOfSupplyCode: string;
+  invoiceTypeLabel?: 'TAX INVOICE' | 'BILL OF SUPPLY';
+  transport?: string;
+  vehicleNo?: string;
+  station?: string;
   customerId: string;
   customerName: string;
   customerAddress: string;
   shippingAddress: string;
+  customerPincode?: string;
   customerMobile: string;
   customerGstin: string;
   status: InvoiceStatus;

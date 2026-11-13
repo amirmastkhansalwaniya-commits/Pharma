@@ -29,6 +29,17 @@ export function formatDateDisplay(isoDate: string): string {
   return `${parts[2]}-${parts[1]}-${parts[0]}`;
 }
 
+const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function formatMonthYear(isoDate: string): string {
+  if (!isoDate) return '-';
+  const parts = isoDate.split('T')[0].split('-');
+  if (parts.length < 2) return isoDate;
+  const monthIdx = parseInt(parts[1], 10) - 1;
+  if (monthIdx < 0 || monthIdx > 11) return isoDate;
+  return `${SHORT_MONTHS[monthIdx]}-${parts[0]}`;
+}
+
 export function todayISO(): string {
   const d = new Date();
   const y = d.getFullYear();

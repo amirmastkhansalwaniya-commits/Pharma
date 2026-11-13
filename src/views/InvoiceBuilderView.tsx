@@ -125,6 +125,21 @@ export const InvoiceBuilderView: React.FC<InvoiceBuilderViewProps> = ({
   const [customerGstin, setCustomerGstin] = useState<string>(
     () => editingInvoice?.customerGstin || ''
   );
+  const [customerPincode, setCustomerPincode] = useState<string>(
+    () => editingInvoice?.customerPincode || ''
+  );
+  const [transport, setTransport] = useState<string>(
+    () => editingInvoice?.transport || 'Self'
+  );
+  const [vehicleNo, setVehicleNo] = useState<string>(
+    () => editingInvoice?.vehicleNo || ''
+  );
+  const [station, setStation] = useState<string>(
+    () => editingInvoice?.station || ''
+  );
+  const [invoiceTypeLabel, setInvoiceTypeLabel] = useState<'AUTO' | 'TAX INVOICE' | 'BILL OF SUPPLY'>(
+    () => editingInvoice?.invoiceTypeLabel || 'AUTO'
+  );
 
   const [lines, setLines] = useState<DraftLineInput[]>(() => {
     if (editingItems && editingItems.length > 0) {
@@ -182,6 +197,7 @@ export const InvoiceBuilderView: React.FC<InvoiceBuilderViewProps> = ({
         setShippingAddress(cust.shippingAddress || cust.address);
         setCustomerMobile(cust.mobile);
         setCustomerGstin(cust.gstin);
+        setCustomerPincode(cust.pincode || '');
         setPlaceOfSupply(cust.state);
         setPlaceOfSupplyCode(cust.stateCode);
       }
@@ -206,6 +222,7 @@ export const InvoiceBuilderView: React.FC<InvoiceBuilderViewProps> = ({
       setShippingAddress(cust.shippingAddress || cust.address);
       setCustomerMobile(cust.mobile);
       setCustomerGstin(cust.gstin);
+      setCustomerPincode(cust.pincode || '');
       setPlaceOfSupply(cust.state);
       setPlaceOfSupplyCode(cust.stateCode);
     }
@@ -344,16 +361,28 @@ export const InvoiceBuilderView: React.FC<InvoiceBuilderViewProps> = ({
             ? ''
             : invoiceNumber;
 
+      const resolvedTypeLabel: 'TAX INVOICE' | 'BILL OF SUPPLY' =
+        invoiceTypeLabel === 'AUTO'
+          ? totals.totalGst > 0
+            ? 'TAX INVOICE'
+            : 'BILL OF SUPPLY'
+          : invoiceTypeLabel;
+
       const invoicePayload: Invoice = {
         id: invoiceId,
         invoiceNumber: invNumToSave,
         invoiceDate,
         placeOfSupply,
         placeOfSupplyCode,
+        invoiceTypeLabel: resolvedTypeLabel,
+        transport: transport.trim() || 'Self',
+        vehicleNo: vehicleNo.trim().toUpperCase(),
+        station: station.trim(),
         customerId,
         customerName: customerName.trim(),
         customerAddress: customerAddress.trim(),
         shippingAddress: shippingAddress.trim() || customerAddress.trim(),
+        customerPincode: customerPincode.trim(),
         customerMobile: customerMobile.trim(),
         customerGstin: customerGstin.trim().toUpperCase(),
         status: targetStatus,
@@ -386,6 +415,9 @@ export const InvoiceBuilderView: React.FC<InvoiceBuilderViewProps> = ({
         setShippingAddress('');
         setCustomerMobile('');
         setCustomerGstin('');
+        setCustomerPincode('');
+        setVehicleNo('');
+        setStation('');
         setLines([createEmptyLine(settings.defaultTaxRate)]);
         setPaymentReceived(0);
         setNotes('');
@@ -509,7 +541,7 @@ export const InvoiceBuilderView: React.FC<InvoiceBuilderViewProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Billing Address
@@ -534,13 +566,25 @@ export const InvoiceBuilderView: React.FC<InvoiceBuilderViewProps> = ({
                 className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 focus:border-emerald-700 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Party Pincode
+              </label>
+              <input
+                type="text"
+                value={customerPincode}
+                onChange={(e) => setCustomerPincode(e.target.value)}
+                placeholder="e.g., 132046"
+                className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3.5 font-mono text-sm text-slate-900 focus:border-emerald-700 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
           </div>
         </div>
 
         {/* Invoice Meta */}
         <div className="space-y-3 border-t border-slate-200 pt-4 lg:col-span-5 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0 dark:border-slate-800">
           <p className="text-xs font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-400">
-            Invoice Metadata
+            Invoice &amp; Transport Metadata
           </p>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -568,28 +612,88 @@ export const InvoiceBuilderView: React.FC<InvoiceBuilderViewProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Place of Supply (Determines CGST+SGST vs IGST)
-            </label>
-            <select
-              value={placeOfSupplyCode}
-              onChange={(e) => handleStateChange(e.target.value)}
-              className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-700 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-            >
-              {INDIAN_STATES.map((st) => (
-                <option key={st.code} value={st.code}>
-                  {st.code} - {st.name}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              Company State: {company.state} ({company.stateCode}) · Applying{' '}
-              <strong className="text-emerald-800 dark:text-emerald-400">
-                {taxType === 'intrastate' ? 'CGST + SGST (Intra-State)' : 'IGST (Inter-State)'}
-              </strong>
-            </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Place of Supply
+              </label>
+              <select
+                value={placeOfSupplyCode}
+                onChange={(e) => handleStateChange(e.target.value)}
+                className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-700 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              >
+                {INDIAN_STATES.map((st) => (
+                  <option key={st.code} value={st.code}>
+                    {st.code} - {st.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Bill Heading
+              </label>
+              <select
+                value={invoiceTypeLabel}
+                onChange={(e) =>
+                  setInvoiceTypeLabel(
+                    e.target.value as 'AUTO' | 'TAX INVOICE' | 'BILL OF SUPPLY'
+                  )
+                }
+                className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-900 focus:border-emerald-700 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              >
+                <option value="AUTO">Auto (Tax / Supply)</option>
+                <option value="TAX INVOICE">TAX INVOICE</option>
+                <option value="BILL OF SUPPLY">BILL OF SUPPLY</option>
+              </select>
+            </div>
           </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                Transport
+              </label>
+              <input
+                type="text"
+                value={transport}
+                onChange={(e) => setTransport(e.target.value)}
+                placeholder="Self"
+                className="mt-1 min-h-[40px] w-full rounded-xl border border-slate-300 bg-white px-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                Vehicle No.
+              </label>
+              <input
+                type="text"
+                value={vehicleNo}
+                onChange={(e) => setVehicleNo(e.target.value.toUpperCase())}
+                placeholder="Optional"
+                className="mt-1 min-h-[40px] w-full rounded-xl border border-slate-300 bg-white px-2.5 font-mono text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                Station
+              </label>
+              <input
+                type="text"
+                value={station}
+                onChange={(e) => setStation(e.target.value)}
+                placeholder="City / Town"
+                className="mt-1 min-h-[40px] w-full rounded-xl border border-slate-300 bg-white px-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
+          </div>
+
+          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            Company State: {company.state} ({company.stateCode}) · Applying{' '}
+            <strong className="text-emerald-800 dark:text-emerald-400">
+              {taxType === 'intrastate' ? 'CGST + SGST (Intra-State)' : 'IGST (Inter-State)'}
+            </strong>
+          </p>
         </div>
       </div>
 
