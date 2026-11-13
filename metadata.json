@@ -1,0 +1,6 @@
+{
+  "name": "ROYAL KING VET PHARMA",
+  "description": "Offline-first GST billing, inventory, customer ledger, and PDF invoicing PWA for ROYAL KING VET PHARMA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
